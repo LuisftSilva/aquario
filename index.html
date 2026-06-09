@@ -523,12 +523,19 @@ function openModal(id){
   document.getElementById('mphoto').innerHTML = s.photo
     ? `<img class="mphoto" src="${s.photo}" alt="${s.customName}">`
     : `<div class="mphoto-ph">${s.emoji}</div>`;
+  const sexHtml = s.sexing
+    ? `<div class="msec"><div class="mslabel">⚥ Macho vs Fêmea</div><p>${s.sexing}</p></div>` : '';
+  const breedLabel = s.category==='planta' ? '🌱 Propagação' : '🥚 Reprodução';
+  const breedHtml = s.breeding
+    ? `<div class="msec"><div class="mslabel">${breedLabel}</div><p>${s.breeding}</p></div>` : '';
   document.getElementById('mcontent').innerHTML=`
     <div class="mname">${s.customName}${qty}</div>
     <div class="msci">${s.scientificName}</div>
     ${badge(s.category)}
     <div class="msec" style="margin-top:14px"><div class="mslabel">📍 Origem</div><p>${s.origin}</p></div>
     <div class="msec"><div class="mslabel">📖 Quem é</div><p>${s.description}</p></div>
+    ${sexHtml}
+    ${breedHtml}
     <div class="msec"><div class="mslabel">⚡ Facto curioso</div><div class="mfact">${s.fact}</div></div>
   `;
   overlay.classList.add('open');
