@@ -1,0 +1,642 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aquário do Pi & Alice 🌊</title>
+    <meta name="description" content="20 litros de caos organizado — peixes, invertebrados e plantas do aquário do Pi & Alice.">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #071420;
+            --surface: #0c2237;
+            --teal: #00d4a0;
+            --coral: #ff6b6b;
+            --gold: #ffd166;
+            --text: #e8f4f8;
+            --muted: #6a9ab0;
+            --border: rgba(0,212,160,0.12);
+            --r: 16px;
+        }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; overflow-x:hidden; }
+
+        /* HERO */
+        .hero {
+            position:relative; padding:56px 24px 40px;
+            text-align:center; overflow:hidden;
+        }
+        .hero::before {
+            content:''; position:absolute; inset:0;
+            background:radial-gradient(ellipse at 50% -10%, rgba(0,212,160,0.14) 0%, transparent 65%);
+            pointer-events:none;
+        }
+        .hero-icon { font-size:3rem; display:block; margin-bottom:14px; }
+        .hero h1 {
+            font-family:'Space Grotesk',sans-serif;
+            font-size:clamp(1.7rem,6vw,2.6rem);
+            font-weight:700; letter-spacing:-0.02em; margin-bottom:8px;
+        }
+        .hero h1 span { color:var(--teal); }
+        .hero p { color:var(--muted); font-size:0.9rem; max-width:320px; margin:0 auto 24px; line-height:1.65; }
+        .hero-stats { display:flex; justify-content:center; gap:28px; position:relative; }
+        .stat-n { font-family:'Space Grotesk',sans-serif; font-size:1.7rem; font-weight:700; color:var(--teal); line-height:1; }
+        .stat-l { font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:0.08em; margin-top:3px; }
+
+        /* BUBBLES */
+        .bubbles { position:absolute; inset:0; pointer-events:none; overflow:hidden; }
+        .bubble {
+            position:absolute; bottom:-20px; border-radius:50%;
+            background:rgba(0,212,160,0.25); border:1px solid rgba(0,212,160,0.45);
+            animation:rise linear infinite;
+        }
+        @keyframes rise {
+            0% { transform:translateY(0) scale(1); opacity:.6; }
+            100% { transform:translateY(-320px) scale(.2); opacity:0; }
+        }
+
+        /* FILTERS */
+        .filters {
+            display:flex; gap:8px; padding:0 16px 20px;
+            overflow-x:auto; scrollbar-width:none; justify-content:center;
+        }
+        .filters::-webkit-scrollbar { display:none; }
+        .fbtn {
+            flex-shrink:0; padding:7px 16px; border-radius:100px;
+            border:1.5px solid var(--border); background:transparent;
+            color:var(--muted); font-family:'DM Sans',sans-serif;
+            font-size:0.83rem; font-weight:500; cursor:pointer; transition:all .2s;
+        }
+        .fbtn.active, .fbtn:hover { background:var(--teal); border-color:var(--teal); color:var(--bg); }
+
+        /* GRID */
+        .grid {
+            display:grid; grid-template-columns:repeat(2,1fr);
+            gap:10px; padding:0 10px 40px;
+            max-width:860px; margin:0 auto;
+        }
+        @media(min-width:560px){ .grid { grid-template-columns:repeat(3,1fr); } }
+        @media(min-width:800px){ .grid { grid-template-columns:repeat(4,1fr); } }
+
+        /* CARD */
+        .card {
+            background:var(--surface); border-radius:var(--r);
+            border:1px solid var(--border); overflow:hidden;
+            cursor:pointer; transition:transform .2s, box-shadow .2s;
+        }
+        .card:hover { transform:translateY(-3px); box-shadow:0 8px 24px rgba(0,212,160,.1); }
+        .card.hidden { display:none; }
+        .card-img { width:100%; aspect-ratio:1; object-fit:cover; display:block; }
+        .card-placeholder {
+            width:100%; aspect-ratio:1; display:flex;
+            align-items:center; justify-content:center;
+            font-size:2.8rem;
+            background:linear-gradient(135deg,#0a1b2e,#081525);
+        }
+        .card-body { padding:11px 11px 13px; }
+        .cname { font-family:'Space Grotesk',sans-serif; font-size:.9rem; font-weight:600; line-height:1.2; margin-bottom:2px; }
+        .csci { font-style:italic; font-size:.68rem; color:var(--teal); margin-bottom:7px; line-height:1.3; }
+        .badge {
+            display:inline-flex; align-items:center; gap:3px;
+            padding:2px 8px; border-radius:100px;
+            font-size:.66rem; font-weight:600;
+            text-transform:uppercase; letter-spacing:.06em;
+        }
+        .b-peixe { background:rgba(255,107,107,.14); color:var(--coral); }
+        .b-invertebrado { background:rgba(255,209,102,.14); color:var(--gold); }
+        .b-planta { background:rgba(0,212,160,.14); color:var(--teal); }
+
+        /* MODAL */
+        .overlay {
+            position:fixed; inset:0; background:rgba(7,20,32,.92);
+            backdrop-filter:blur(10px); z-index:100;
+            display:flex; align-items:flex-end; justify-content:center;
+            opacity:0; pointer-events:none; transition:opacity .25s;
+        }
+        .overlay.open { opacity:1; pointer-events:all; }
+        .modal {
+            background:var(--surface); border-radius:22px 22px 0 0;
+            width:100%; max-width:580px; max-height:88vh;
+            overflow-y:auto; transform:translateY(100%);
+            transition:transform .3s cubic-bezier(.34,1.56,.64,1);
+            padding-bottom:48px;
+        }
+        .overlay.open .modal { transform:translateY(0); }
+        .handle { width:36px; height:4px; background:rgba(255,255,255,.12); border-radius:2px; margin:14px auto 0; }
+        .mwrap { position:relative; }
+        .mclose {
+            position:absolute; top:12px; right:12px; z-index:10;
+            width:34px; height:34px; border-radius:50%;
+            background:rgba(0,0,0,.4); border:none; color:var(--text);
+            font-size:.9rem; cursor:pointer; display:flex; align-items:center; justify-content:center;
+        }
+        .mphoto { width:100%; height:210px; object-fit:cover; display:block; }
+        .mphoto-ph {
+            width:100%; height:210px; display:flex; align-items:center;
+            justify-content:center; font-size:5rem;
+            background:linear-gradient(135deg,#0a1628,#0c2a42);
+        }
+        .mcontent { padding:18px 18px 0; }
+        .mname { font-family:'Space Grotesk',sans-serif; font-size:1.45rem; font-weight:700; line-height:1.1; margin-bottom:3px; }
+        .msci { font-style:italic; color:var(--teal); font-size:.87rem; margin-bottom:12px; }
+        .msec { margin-bottom:14px; }
+        .mslabel { font-size:.68rem; text-transform:uppercase; letter-spacing:.1em; color:var(--muted); margin-bottom:5px; font-weight:600; }
+        .msec p { font-size:.87rem; line-height:1.65; color:var(--text); }
+        .mfact {
+            background:rgba(0,212,160,.08); border-left:3px solid var(--teal);
+            border-radius:0 8px 8px 0; padding:11px 13px;
+            font-size:.84rem; line-height:1.65; font-style:italic;
+        }
+        .qty { color:var(--muted); font-size:.8rem; }
+
+        /* QR SECTION */
+        .qr-sec {
+            max-width:420px; margin:0 auto 56px; padding:28px 24px;
+            text-align:center;
+        }
+        .qr-sec h2 {
+            font-family:'Space Grotesk',sans-serif; font-size:1.2rem;
+            font-weight:600; margin-bottom:6px;
+        }
+        .qr-sec p { color:var(--muted); font-size:.82rem; margin-bottom:20px; line-height:1.55; }
+        .qr-box {
+            display:inline-block; padding:14px; background:#fff;
+            border-radius:14px; line-height:0;
+            box-shadow:0 8px 30px rgba(0,212,160,.15);
+        }
+        .qr-box img, .qr-box canvas { display:block; border-radius:4px; }
+        .qr-url {
+            margin-top:14px; font-size:.74rem; color:var(--muted);
+            word-break:break-all; font-family:'Space Grotesk',sans-serif;
+        }
+        .qr-actions { margin-top:16px; display:flex; gap:8px; justify-content:center; flex-wrap:wrap; }
+        .qr-btn {
+            padding:8px 16px; border-radius:100px; border:1.5px solid var(--border);
+            background:transparent; color:var(--teal); font-family:'DM Sans',sans-serif;
+            font-size:.8rem; font-weight:500; cursor:pointer; transition:all .2s;
+        }
+        .qr-btn:hover { background:var(--teal); color:var(--bg); border-color:var(--teal); }
+
+        footer { text-align:center; padding:20px 20px 36px; color:var(--muted); font-size:.75rem; line-height:1.7; }
+        .edit-trigger {
+            background:none; border:none; color:var(--muted);
+            font-family:'DM Sans',sans-serif; font-size:.75rem;
+            cursor:pointer; text-decoration:underline; text-underline-offset:3px;
+            opacity:.7; transition:opacity .2s; margin-top:6px;
+        }
+        .edit-trigger:hover { opacity:1; color:var(--teal); }
+
+        /* EDIT PANEL (side sheet) */
+        .panel-overlay {
+            position:fixed; inset:0; background:rgba(7,20,32,.7);
+            backdrop-filter:blur(6px); z-index:200;
+            opacity:0; pointer-events:none; transition:opacity .25s;
+        }
+        .panel-overlay.open { opacity:1; pointer-events:all; }
+        .panel {
+            position:fixed; top:0; right:0; height:100%;
+            width:min(420px,90vw); background:var(--surface);
+            border-left:1px solid var(--border);
+            transform:translateX(100%); transition:transform .3s cubic-bezier(.34,1.3,.64,1);
+            z-index:201; display:flex; flex-direction:column;
+        }
+        .panel.open { transform:translateX(0); }
+        .panel-head {
+            padding:20px 20px 16px; border-bottom:1px solid var(--border);
+            display:flex; align-items:flex-start; justify-content:space-between; gap:12px;
+        }
+        .panel-head h3 { font-family:'Space Grotesk',sans-serif; font-size:1.1rem; font-weight:600; }
+        .panel-head p { color:var(--muted); font-size:.76rem; margin-top:4px; line-height:1.5; }
+        .panel-close {
+            flex-shrink:0; width:32px; height:32px; border-radius:50%;
+            background:rgba(0,0,0,.3); border:none; color:var(--text);
+            font-size:.85rem; cursor:pointer;
+        }
+        .panel-body { flex:1; overflow-y:auto; padding:8px 16px; }
+        .edit-row { padding:12px 4px; border-bottom:1px solid rgba(255,255,255,.04); }
+        .edit-row-top { display:flex; align-items:center; gap:8px; margin-bottom:7px; }
+        .edit-emoji { font-size:1.3rem; }
+        .edit-sci { font-style:italic; font-size:.72rem; color:var(--teal); }
+        .edit-row input {
+            width:100%; padding:9px 11px; border-radius:9px;
+            border:1.5px solid var(--border); background:var(--bg);
+            color:var(--text); font-family:'DM Sans',sans-serif; font-size:.85rem;
+            transition:border-color .2s;
+        }
+        .edit-row input:focus { outline:none; border-color:var(--teal); }
+        .panel-foot {
+            padding:14px 16px; border-top:1px solid var(--border);
+            display:flex; gap:10px;
+        }
+        .pbtn {
+            flex:1; padding:11px; border-radius:11px; border:none;
+            font-family:'DM Sans',sans-serif; font-size:.85rem; font-weight:600;
+            cursor:pointer; transition:filter .2s;
+        }
+        .pbtn-save { background:var(--teal); color:var(--bg); }
+        .pbtn-reset { background:transparent; border:1.5px solid var(--border); color:var(--muted); }
+        .pbtn:hover { filter:brightness(1.1); }
+        .toast {
+            position:fixed; bottom:24px; left:50%; transform:translateX(-50%) translateY(20px);
+            background:var(--teal); color:var(--bg); padding:11px 20px; border-radius:100px;
+            font-size:.82rem; font-weight:600; z-index:300;
+            opacity:0; pointer-events:none; transition:all .3s;
+        }
+        .toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+    </style>
+</head>
+<body>
+
+<section class="hero">
+    <div class="bubbles" id="bubbles"></div>
+    <span class="hero-icon">🐠</span>
+    <h1>Aquário do <span>Pi & Alice</span></h1>
+    <p>20 litros de caos organizado, diplomacia entre espécies, e muito nitrato por absorver.</p>
+    <div class="hero-stats">
+        <div class="stat">
+            <div class="stat-n" id="fc" data-target="0">0</div>
+            <div class="stat-l">Peixes</div>
+        </div>
+        <div class="stat">
+            <div class="stat-n" id="ic" data-target="0">0</div>
+            <div class="stat-l">Invertebrados</div>
+        </div>
+        <div class="stat">
+            <div class="stat-n" id="pc" data-target="0">0</div>
+            <div class="stat-l">Plantas</div>
+        </div>
+    </div>
+</section>
+
+<div class="filters">
+    <button class="fbtn active" data-f="all">Todos</button>
+    <button class="fbtn" data-f="peixe">🐟 Peixes</button>
+    <button class="fbtn" data-f="invertebrado">🦐 Invertebrados</button>
+    <button class="fbtn" data-f="planta">🌿 Plantas</button>
+</div>
+
+<div class="grid" id="grid"></div>
+
+<!-- QR CODE -->
+<section class="qr-sec">
+    <h2>📲 Aponta e partilha</h2>
+    <p>Este QR aponta para esta própria página. Imprime-o e cola ao lado do aquário.</p>
+    <div class="qr-box" id="qrbox"></div>
+    <div class="qr-url" id="qrurl"></div>
+    <div class="qr-actions">
+        <button class="qr-btn" id="qrdownload">⬇ Descarregar QR</button>
+    </div>
+</section>
+
+<!-- MODAL -->
+<div class="overlay" id="overlay">
+    <div class="modal">
+        <div class="handle"></div>
+        <div class="mwrap">
+            <button class="mclose" id="mclose">✕</button>
+            <div id="mphoto"></div>
+            <div class="mcontent" id="mcontent"></div>
+        </div>
+    </div>
+</div>
+
+<!-- EDIT PANEL -->
+<div class="panel-overlay" id="panelOverlay"></div>
+<aside class="panel" id="panel">
+    <div class="panel-head">
+        <div>
+            <h3>✏️ Editar nomes</h3>
+            <p>Pi & Alice: escolham um nome para cada bicho. Fica guardado neste browser.</p>
+        </div>
+        <button class="panel-close" id="panelClose">✕</button>
+    </div>
+    <div class="panel-body" id="panelBody"></div>
+    <div class="panel-foot">
+        <button class="pbtn pbtn-reset" id="resetNames">↺ Repor</button>
+        <button class="pbtn pbtn-save" id="saveNames">Guardar</button>
+    </div>
+</aside>
+
+<div class="toast" id="toast"></div>
+
+<footer>
+    Aquário do Pi & Alice · Covilhã · 20L Walstad Method<br>
+    <button class="edit-trigger" id="editTrigger">✏️ Editar nomes das espécies</button>
+</footer>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script>
+// ================================================================
+//  DADOS DAS ESPÉCIES
+//  Os customName são editáveis pelo painel "Editar nomes" (guardado
+//  em localStorage). Para mudar fotos/descrições, edita aqui.
+//  Foto: substitui photo:null por photo:'https://.../imagem.jpg'
+// ================================================================
+const DEFAULTS = [
+  {
+    id:'neon', category:'peixe', emoji:'🐠',
+    customName:'??? & ???',
+    scientificName:'Paracheirodon innesi',
+    origin:'Amazónia — Peru, Brasil, Colômbia',
+    quantity:8, photo:null,
+    description:'O peixe mais fotogénico da Amazónia desde antes do Instagram existir. Aquela listra azul néon não é pintura — é pura física, como um holograma com nadadeiras. Viajam sempre em cardume porque individualmente têm zero personalidade, mas juntos são o show principal.',
+    fact:'A listra azul apaga-se quando dormem. Ou seja: "morrem" simbolicamente todas as noites e renascem de manhã. Metal.'
+  },
+  {
+    id:'kuhli_r', category:'peixe', emoji:'🐍',
+    customName:'??? & ???',
+    scientificName:'Pangio kuhlii',
+    origin:'Sudeste Asiático — Malásia, Indonésia, Tailândia',
+    quantity:2, photo:null,
+    description:'Parece uma cobra. Move-se como uma cobra. Esconde-se durante TODO o dia como se devesse dinheiro a toda a gente. Só aparece à noite para comer e desaparecer. O introvertido supremo do aquário.',
+    fact:'Consegue escapar por qualquer fresta acima de 3mm. Literal ninja aquático. Tampa fechada obrigatória ou aparece no chão da sala.'
+  },
+  {
+    id:'kuhli_n', category:'peixe', emoji:'🖤',
+    customName:'??? & ???',
+    scientificName:'Pangio oblonga',
+    origin:'Sudeste Asiático — Malásia, Indonésia',
+    quantity:2, photo:null,
+    description:'O irmão mais sombrio do Kuhli. Completamente preto, sem padrão, sem drama estético. A escolha de quem já fez as pazes com o minimalismo. Mesmos hábitos noturnos, mesma vida de fugitivo das sombras.',
+    fact:'Tão preto que por vezes desaparece completamente contra o substrato escuro. Literalmente invisível em plain sight.'
+  },
+  {
+    id:'cory', category:'peixe', emoji:'🐼',
+    customName:'??? & ???',
+    scientificName:'Corydoras panda',
+    origin:'Peru — bacia do Rio Ucayali',
+    quantity:3, photo:null,
+    description:'Tem manchas pretas em volta dos olhos como um panda. É pequenininho, fofo, e passa os dias a remexer o fundo com os bigodes em busca de comida. O trabalhador incansável do aquário. Não há resto orgânico que lhe passe ao lado.',
+    fact:'Pode respirar ar da superfície em emergência — engole uma bolha e absorve oxigénio pelo intestino. Sim. O peixe faz isso.'
+  },
+  {
+    id:'neritina', category:'invertebrado', emoji:'🐌',
+    customName:'??? & ???',
+    scientificName:'Neritina natalensis',
+    origin:'África Oriental — rios e estuários',
+    quantity:2, photo:null,
+    description:'A equipa de limpeza que nunca pede aumento, nunca pede férias, nunca reclama. Come algas 24/7 em silêncio total. A concha zebrada é genuinamente bonita, o que é quase injusto dado o serviço que presta.',
+    fact:'Para se reproduzir precisaria de água salgada. O aquário é o celibato involuntário deles. Tragicamente dedicados ao trabalho.'
+  },
+  {
+    id:'cherry', category:'invertebrado', emoji:'🦐',
+    customName:'??? & ???',
+    scientificName:'Neocaridina davidi',
+    origin:'Taiwan',
+    quantity:2, photo:null,
+    description:'Um vermelho intenso selecionado durante décadas por criadores taiwaneses obcecados com cor. O outro semi-transparente e misterioso. Juntos formam uma dupla de investigadores do substrato — sempre em movimento, sempre a investigar tudo.',
+    fact:'Se se reproduzirem com camarões de outras cores, os filhos saem castanhos. Todas as gerações de seleção artificial desfeitas numa noite romântica.'
+  },
+  {
+    id:'anubias', category:'planta', emoji:'🌿',
+    customName:'??? & ???',
+    scientificName:'Anubias barteri var. nana',
+    origin:'Camarões — África Ocidental',
+    quantity:2, photo:null,
+    description:'Cresceu em rios de África agarrada a rochas no meio de corredeiras. Transplantada para um aquário em Covilhã sem pedir autorização. Não precisa de substrato, não precisa de CO₂, não precisa de quase nada. A planta mais independente do aquário.',
+    fact:'Cresce TÃO devagar que se consegues notar diferença numa semana, algo está errado. Crescimento visível a olho nu: leva meses.'
+  },
+  {
+    id:'microsorum', category:'planta', emoji:'🌱',
+    customName:'??? & ???',
+    scientificName:"Microsorum pteropus 'minor'",
+    origin:'Sudeste Asiático',
+    quantity:1, photo:null,
+    description:'Feto aquático que recusa categoricamente viver no substrato como toda a gente. Escolheu aderir à madeira com as raízes, suspenso entre o chão e a superfície. Indie. As folhas têm textura de veludo molhado.',
+    fact:'Reproduz-se formando pequenas plantas nas bordas das folhas velhas. Clona-se silenciosamente enquanto toda a gente dorme.'
+  },
+  {
+    id:'hygrophila', category:'planta', emoji:'🌸',
+    customName:'??? & ???',
+    scientificName:"Hygrophila sp. 'Rosanervig'",
+    origin:'Sudeste Asiático',
+    quantity:1, photo:null,
+    description:'Folhas verdes com nervuras cor-de-rosa como tatuagens de henna. A planta mais hipster do aquário — visualmente marcante, crescimento vigoroso, e absorve nitratos como se fosse o seu propósito de vida. Porque é.',
+    fact:'A intensidade da cor das nervuras aumenta com boa iluminação. É literalmente mais bonita quando bem alimentada de luz.'
+  },
+  {
+    id:'lemna', category:'planta', emoji:'🟢',
+    customName:'??? & ???',
+    scientificName:'Lemna minor',
+    origin:'Mundial — literalmente em todo o lado',
+    quantity:null, photo:null,
+    description:'A menor planta com flor do planeta. Cabe em qualquer sítio. Reproduz-se mais rápido do que se consegue tirar. Come nitratos ao pequeno-almoço e duplica a cada 2 dias. Não se escolhe ter Lemna — ela escolhe estar.',
+    fact:'Presente em todos os continentes exceto na Antártida. A planta aquática mais distribuída do mundo. Uma invasão silenciosa desde sempre.'
+  }
+];
+
+const STORAGE_KEY = 'aquario_custom_names';
+
+// Aplica nomes guardados (se existirem) sobre os defaults
+function loadSpecies(){
+  let saved = {};
+  try { saved = JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch(e){ saved = {}; }
+  return DEFAULTS.map(s => ({ ...s, customName: saved[s.id] || s.customName }));
+}
+let species = loadSpecies();
+
+// ---- RENDER ----
+const grid = document.getElementById('grid');
+const overlay = document.getElementById('overlay');
+
+function badge(cat){ return `<span class="badge b-${cat}">${{peixe:'🐟 Peixe',invertebrado:'🦐 Invertebrado',planta:'🌿 Planta'}[cat]}</span>`; }
+
+function renderGrid(f='all'){
+  grid.innerHTML='';
+  species.forEach(s=>{
+    if(f!=='all' && s.category!==f) return;
+    const qty = s.quantity ? `<span class="qty"> ×${s.quantity}</span>` : '';
+    const ph = s.photo
+      ? `<img class="card-img" src="${s.photo}" alt="${s.customName}">`
+      : `<div class="card-placeholder">${s.emoji}</div>`;
+    const d = document.createElement('div');
+    d.className='card'; d.dataset.id=s.id;
+    d.innerHTML=`${ph}<div class="card-body"><div class="cname">${s.customName}${qty}</div><div class="csci">${s.scientificName}</div>${badge(s.category)}</div>`;
+    d.addEventListener('click',()=>openModal(s.id));
+    grid.appendChild(d);
+  });
+}
+
+let currentFilter = 'all';
+
+function openModal(id){
+  const s=species.find(x=>x.id===id); if(!s) return;
+  const qty = s.quantity ? ` <span class="qty">×${s.quantity}</span>` : '';
+  document.getElementById('mphoto').innerHTML = s.photo
+    ? `<img class="mphoto" src="${s.photo}" alt="${s.customName}">`
+    : `<div class="mphoto-ph">${s.emoji}</div>`;
+  document.getElementById('mcontent').innerHTML=`
+    <div class="mname">${s.customName}${qty}</div>
+    <div class="msci">${s.scientificName}</div>
+    ${badge(s.category)}
+    <div class="msec" style="margin-top:14px"><div class="mslabel">📍 Origem</div><p>${s.origin}</p></div>
+    <div class="msec"><div class="mslabel">📖 Quem é</div><p>${s.description}</p></div>
+    <div class="msec"><div class="mslabel">⚡ Facto curioso</div><div class="mfact">${s.fact}</div></div>
+  `;
+  overlay.classList.add('open');
+}
+
+document.getElementById('mclose').addEventListener('click',()=>overlay.classList.remove('open'));
+overlay.addEventListener('click',e=>{ if(e.target===overlay) overlay.classList.remove('open'); });
+document.querySelectorAll('.fbtn').forEach(b=>{
+  b.addEventListener('click',()=>{
+    document.querySelectorAll('.fbtn').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active'); currentFilter=b.dataset.f; renderGrid(currentFilter);
+  });
+});
+
+// ---- STATS (contadores animados) ----
+function animateCount(el, target){
+  const dur = 900, start = performance.now();
+  function step(now){
+    const p = Math.min((now-start)/dur, 1);
+    const eased = 1 - Math.pow(1-p, 3); // easeOutCubic
+    el.textContent = Math.round(eased*target);
+    if(p<1) requestAnimationFrame(step);
+  }
+  requestAnimationFrame(step);
+}
+function stats(){
+  const f = species.filter(s=>s.category==='peixe').reduce((a,s)=>a+(s.quantity||1),0);
+  const i = species.filter(s=>s.category==='invertebrado').reduce((a,s)=>a+(s.quantity||1),0);
+  const p = species.filter(s=>s.category==='planta').length;
+  animateCount(document.getElementById('fc'), f);
+  animateCount(document.getElementById('ic'), i);
+  animateCount(document.getElementById('pc'), p);
+}
+
+// ---- BUBBLES ----
+function bubbles(){
+  const c=document.getElementById('bubbles');
+  for(let i=0;i<14;i++){
+    const b=document.createElement('div'); b.className='bubble';
+    const sz=(Math.random()*7+3)+'px';
+    b.style.cssText=`left:${Math.random()*100}%;width:${sz};height:${sz};animation-duration:${Math.random()*5+3}s;animation-delay:${Math.random()*8}s`;
+    c.appendChild(b);
+  }
+}
+
+// ---- QR CODE (do próprio URL da página) ----
+function buildQR(){
+  const url = window.location.href.split('#')[0];
+  document.getElementById('qrurl').textContent = url;
+  const box = document.getElementById('qrbox');
+  box.innerHTML='';
+  new QRCode(box, {
+    text: url,
+    width: 180,
+    height: 180,
+    colorDark: '#071420',
+    colorLight: '#ffffff',
+    correctLevel: QRCode.CorrectLevel.M
+  });
+}
+document.getElementById('qrdownload').addEventListener('click',()=>{
+  const img = document.querySelector('#qrbox img') || document.querySelector('#qrbox canvas');
+  if(!img) return;
+  const src = img.tagName === 'IMG' ? img.src : img.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = src; a.download = 'aquario-qr.png'; a.click();
+});
+
+// ---- EDIT PANEL ----
+const panel = document.getElementById('panel');
+const panelOverlay = document.getElementById('panelOverlay');
+const panelBody = document.getElementById('panelBody');
+
+function openPanel(){
+  panelBody.innerHTML = species.map(s=>`
+    <div class="edit-row">
+      <div class="edit-row-top">
+        <span class="edit-emoji">${s.emoji}</span>
+        <span class="edit-sci">${s.scientificName}</span>
+      </div>
+      <input type="text" data-id="${s.id}" value="${s.customName.replace(/"/g,'&quot;')}" placeholder="Dá-lhe um nome…">
+    </div>
+  `).join('');
+  panel.classList.add('open');
+  panelOverlay.classList.add('open');
+}
+function closePanel(){ panel.classList.remove('open'); panelOverlay.classList.remove('open'); }
+
+document.getElementById('editTrigger').addEventListener('click', openPanel);
+document.getElementById('panelClose').addEventListener('click', closePanel);
+panelOverlay.addEventListener('click', closePanel);
+
+document.getElementById('saveNames').addEventListener('click',()=>{
+  const saved = {};
+  panelBody.querySelectorAll('input').forEach(inp=>{
+    const v = inp.value.trim();
+    if(v) saved[inp.dataset.id] = v;
+  });
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(saved));
+  species = loadSpecies();
+  renderGrid(currentFilter);
+  closePanel();
+  showToast('✓ Nomes guardados!');
+});
+
+document.getElementById('resetNames').addEventListener('click',()=>{
+  localStorage.removeItem(STORAGE_KEY);
+  species = loadSpecies();
+  renderGrid(currentFilter);
+  openPanel(); // re-render inputs com os defaults
+  showToast('↺ Nomes repostos');
+});
+
+// ---- TOAST ----
+let toastTimer;
+function showToast(msg){
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
+}
+
+// ---- INIT ----
+bubbles(); stats(); renderGrid(); buildQR();
+</script>
+
+<!--
+================================================================
+  COMO PUBLICAR ESTE SITE NO GITHUB PAGES
+================================================================
+
+1) CRIAR O REPOSITÓRIO
+   - Vai a https://github.com/new
+   - Repository name: aquario  (sem acento — o GitHub não aceita "á")
+   - Visibilidade: Public
+   - Cria o repositório
+
+2) FAZER UPLOAD DO index.html
+   - Na página do repo, clica em "Add file" > "Upload files"
+   - Arrasta este ficheiro "index.html" para lá
+   - Commit changes
+
+   (ou por linha de comandos:)
+     git clone https://github.com/<utilizador>/aquario.git
+     cd aquario
+     cp /caminho/index.html .
+     git add index.html
+     git commit -m "Site do aquário"
+     git push
+
+3) ATIVAR O GITHUB PAGES
+   - No repo, vai a Settings > Pages
+   - Em "Build and deployment" > Source: escolhe "Deploy from a branch"
+   - Branch: main (ou master)  /  pasta: / (root)
+   - Save
+   - Aguarda ~1 minuto. O URL aparece no topo dessa página, do tipo:
+       https://<utilizador>.github.io/aquario/
+
+4) GERAR / OBTER O QR CODE
+   - Abre o site publicado nesse URL
+   - Desce até à secção "📲 Aponta e partilha"
+   - O QR code é gerado automaticamente a partir do URL da página
+   - Clica em "⬇ Descarregar QR" para guardar a imagem PNG
+   - Imprime e cola ao lado do aquário 🐠
+
+================================================================
+-->
+</body>
+</html>
