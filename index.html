@@ -6,6 +6,8 @@
     <title>Aquário do Pi & Alice 🌊</title>
     <meta name="description" content="20 litros de caos organizado — peixes, invertebrados e plantas do aquário do Pi & Alice.">
     <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;1,9..40,400&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
     <style>
         :root {
             --bg: #071420;
@@ -149,6 +151,48 @@
         }
         .qty { color:var(--muted); font-size:.8rem; }
 
+        /* MAP */
+        .map-sec { max-width:900px; margin:0 auto 48px; padding:0 16px; text-align:center; }
+        .map-sec h2 { font-family:'Space Grotesk',sans-serif; font-size:1.2rem; font-weight:600; margin-bottom:6px; }
+        .map-sec p { color:var(--muted); font-size:.82rem; margin-bottom:18px; line-height:1.55; }
+        #map {
+            height:440px; border-radius:18px; border:1px solid var(--border);
+            background:#06101a; overflow:hidden; z-index:1;
+            box-shadow:0 10px 40px rgba(0,0,0,.45);
+        }
+        .leaflet-container { background:#06101a; font-family:'DM Sans',sans-serif; }
+        .map-marker {
+            display:flex; align-items:center; justify-content:center;
+            width:30px; height:30px; border-radius:50%; font-size:15px;
+            background:rgba(7,20,32,.92); border:2px solid var(--teal);
+            box-shadow:0 0 12px var(--teal); cursor:pointer; transition:transform .15s;
+        }
+        .map-marker:hover { transform:scale(1.2); }
+        .map-marker.m-peixe { border-color:var(--coral); box-shadow:0 0 12px var(--coral); }
+        .map-marker.m-invertebrado { border-color:var(--gold); box-shadow:0 0 12px var(--gold); }
+        .map-marker.m-planta { border-color:var(--teal); box-shadow:0 0 12px var(--teal); }
+        .leaflet-popup-content-wrapper, .leaflet-popup-tip {
+            background:var(--surface); color:var(--text); box-shadow:0 6px 24px rgba(0,0,0,.5);
+        }
+        .leaflet-popup-content { margin:12px 14px; font-family:'DM Sans',sans-serif; }
+        .map-pop-name { font-family:'Space Grotesk',sans-serif; font-weight:600; font-size:.95rem; }
+        .map-pop-sci { font-style:italic; color:var(--teal); font-size:.75rem; margin:2px 0 4px; }
+        .map-pop-origin { color:var(--muted); font-size:.75rem; }
+        .map-pop-btn {
+            display:inline-block; margin-top:8px; padding:5px 12px; border-radius:100px;
+            background:var(--teal); color:var(--bg); font-size:.72rem; font-weight:600;
+            border:none; cursor:pointer;
+        }
+        .map-legend { display:flex; gap:16px; justify-content:center; flex-wrap:wrap; margin-top:14px; font-size:.74rem; color:var(--muted); }
+        .map-legend span { display:inline-flex; align-items:center; gap:5px; }
+        .map-legend i { width:10px; height:10px; border-radius:50%; display:inline-block; }
+        .lg-peixe { background:var(--coral); box-shadow:0 0 6px var(--coral); }
+        .lg-invertebrado { background:var(--gold); box-shadow:0 0 6px var(--gold); }
+        .lg-planta { background:var(--teal); box-shadow:0 0 6px var(--teal); }
+        .leaflet-control-attribution { background:rgba(7,20,32,.7) !important; color:var(--muted) !important; }
+        .leaflet-control-attribution a { color:var(--teal) !important; }
+        .leaflet-bar a { background:var(--surface) !important; color:var(--text) !important; border-color:var(--border) !important; }
+
         /* QR SECTION */
         .qr-sec {
             max-width:420px; margin:0 auto 56px; padding:28px 24px;
@@ -277,6 +321,18 @@
 
 <div class="grid" id="grid"></div>
 
+<!-- MAP -->
+<section class="map-sec">
+    <h2>🗺️ De onde vêm</h2>
+    <p>Quatro cantos do mundo num aquário de 20 litros. Toca num marcador para abrir a ficha da espécie.</p>
+    <div id="map"></div>
+    <div class="map-legend">
+        <span><i class="lg-peixe"></i> Peixes</span>
+        <span><i class="lg-invertebrado"></i> Invertebrados</span>
+        <span><i class="lg-planta"></i> Plantas</span>
+    </div>
+</section>
+
 <!-- QR CODE -->
 <section class="qr-sec">
     <h2>📲 Aponta e partilha</h2>
@@ -325,6 +381,8 @@
 </footer>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 // ================================================================
 //  DADOS DAS ESPÉCIES
@@ -593,8 +651,60 @@ function showToast(msg){
   toastTimer = setTimeout(()=>t.classList.remove('show'), 2200);
 }
 
+// ---- MAPA (origens geográficas) ----
+// [latitude, longitude] de um ponto representativo da origem de cada espécie
+const ORIGINS = {
+  neon:       [ -4.5, -73.5],   // Amazónia peruana
+  kuhli_r:    [  2.5, 102.5],   // Península Malaia
+  kuhli_n:    [  0.8, 104.2],   // Sumatra / Indonésia
+  cory:       [ -8.4, -74.5],   // Rio Ucayali, Peru
+  neritina:   [-29.6,  31.0],   // KwaZulu-Natal, África do Sul
+  cherry:     [ 23.7, 121.0],   // Taiwan
+  anubias:    [  4.5,   9.7],   // Camarões
+  microsorum: [  7.5, 100.2],   // Sul da Tailândia
+  hygrophila: [ 14.5, 101.3],   // Tailândia central
+  lemna:      [ 47.0,   8.2]    // Europa (mas, na verdade, em todo o lado)
+};
+
+let map;
+function buildMap(){
+  if(map || typeof L === 'undefined') return;
+  map = L.map('map', {
+    worldCopyJump:true, minZoom:1, maxZoom:8,
+    scrollWheelZoom:false
+  }).setView([12, 25], 2);
+
+  L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+    subdomains:'abcd', maxZoom:19,
+    attribution:'&copy; OpenStreetMap &copy; CARTO'
+  }).addTo(map);
+
+  // scroll-zoom só depois de focar/clicar no mapa (melhor experiência em mobile)
+  map.on('focus', ()=>map.scrollWheelZoom.enable());
+  map.on('blur',  ()=>map.scrollWheelZoom.disable());
+
+  species.forEach(s=>{
+    const c = ORIGINS[s.id]; if(!c) return;
+    const icon = L.divIcon({
+      className:'',
+      html:`<div class="map-marker m-${s.category}">${s.emoji}</div>`,
+      iconSize:[30,30], iconAnchor:[15,15], popupAnchor:[0,-15]
+    });
+    const m = L.marker(c, {icon}).addTo(map);
+    // conteúdo do popup avaliado na abertura -> reflete nomes editados
+    m.bindPopup(()=>{
+      const sp = species.find(x=>x.id===s.id) || s;
+      return `
+        <div class="map-pop-name">${sp.emoji} ${sp.customName}</div>
+        <div class="map-pop-sci">${sp.scientificName}</div>
+        <div class="map-pop-origin">📍 ${sp.origin}</div>
+        <button class="map-pop-btn" onclick="openModal('${sp.id}')">Ver ficha →</button>`;
+    });
+  });
+}
+
 // ---- INIT ----
-bubbles(); stats(); renderGrid(); buildQR();
+bubbles(); stats(); renderGrid(); buildQR(); buildMap();
 </script>
 
 <!--
