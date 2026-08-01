@@ -30,7 +30,7 @@
     .legend{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:12px;color:var(--muted);font-size:.76rem}.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:5px}.dot.fish{background:var(--coral)}.dot.inv{background:var(--gold)}.dot.plant{background:var(--teal)}
     .marker{width:30px;height:30px;border-radius:50%;display:grid;place-items:center;background:rgba(7,20,32,.94);border:2px solid var(--teal);font-size:15px;box-shadow:0 0 12px var(--teal)}.marker.peixe{border-color:var(--coral);box-shadow:0 0 12px var(--coral)}.marker.invertebrado{border-color:var(--gold);box-shadow:0 0 12px var(--gold)}
     .leaflet-popup-content-wrapper,.leaflet-popup-tip{background:var(--surface);color:var(--text)}.leaflet-popup-content{font-family:'DM Sans',sans-serif}.pop-name{font-family:'Space Grotesk';font-weight:700}.pop-sci{font-style:italic;color:var(--teal);font-size:.78rem;margin:2px 0 4px}.pop-origin{color:var(--muted);font-size:.78rem}
-    .note{max-width:760px;margin:36px auto 0;padding:18px;border:1px solid var(--border);border-radius:16px;background:rgba(0,212,160,.06);line-height:1.65;color:var(--muted)}.note strong{color:var(--text)}footer{text-align:center;color:var(--muted);padding:10px 16px 36px;font-size:.78rem}
+    footer{text-align:center;color:var(--muted);padding:36px 16px;font-size:.78rem}
     dialog{width:min(92vw,560px);max-height:86vh;margin:auto;border:1px solid var(--border);border-radius:20px;background:var(--surface);color:var(--text);padding:0;box-shadow:0 20px 80px rgba(0,0,0,.6)}dialog::backdrop{background:rgba(2,10,17,.82);backdrop-filter:blur(5px)}.modal-photo{width:100%;height:260px;object-fit:cover;background:var(--surface2)}.modal-content{padding:19px}.modal-content h2{font-size:1.45rem}.modal-content .sci{font-size:.88rem;margin-bottom:14px;display:block}.modal-content p{line-height:1.65;margin-top:12px}.modal-content .label{color:var(--muted);font-size:.7rem;text-transform:uppercase;letter-spacing:.1em;font-weight:700}.close{position:absolute;right:12px;top:12px;width:36px;height:36px;border:0;border-radius:50%;background:rgba(0,0,0,.55);color:white;cursor:pointer;font-size:1rem}.modal-wrap{position:relative}
   </style>
 </head>
@@ -40,7 +40,6 @@
 <main>
 <section class="grid" id="grid"></section>
 <section class="map-section"><h2>🗺️ De onde vêm</h2><p>Localização aproximada da origem natural de cada espécie. Toca num marcador para ver os detalhes.</p><div class="map-wrap"><div id="map" class="map"></div><div class="legend"><span><i class="dot fish"></i>Peixes</span><span><i class="dot inv"></i>Invertebrados</span><span><i class="dot plant"></i>Plantas</span></div></div></section>
-<div class="note"><strong>Nota sobre as Fittonias:</strong> estão registadas como plantas emersas, com as raízes em contacto com a água e as folhas fora dela. A Limnophila sessiliflora é aquática e fica totalmente submersa, preferencialmente na zona traseira.</div>
 </main>
 <dialog id="details"><div class="modal-wrap"><button class="close" aria-label="Fechar">✕</button><div id="modal"></div></div></dialog>
 <footer>Aquário do Pi & Alice · Covilhã · 20 L</footer>
