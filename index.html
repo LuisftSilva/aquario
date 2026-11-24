@@ -3,8 +3,8 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Aquário do Pi & Alice</title>
-  <meta name="description" content="Habitantes, plantas, cuidados, reprodução e origens do aquário de 20 litros do Pi & Alice.">
+  <title>Aquário do Pi</title>
+  <meta name="description" content="Habitantes, plantas, cuidados, reprodução e origens do aquário de 20 litros do Pi.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
@@ -31,11 +31,11 @@
   </style>
 </head>
 <body>
-<header><div style="font-size:3rem">🌊</div><h1>Aquário do <span style="color:var(--teal)">Pi & Alice</span></h1><p>20 litros plantados, com um cardume de tetras-neon, camarões, caracóis e uma selva em crescimento.</p><div class="stats"><div class="stat"><strong>6</strong><span>Peixes</span></div><div class="stat"><strong>Indef.</strong><span>Invertebrados</span></div><div class="stat"><strong>6</strong><span>Espécies de plantas e algas</span></div></div></header>
+<header><div style="font-size:3rem">🌊</div><h1>Aquário do <span style="color:var(--teal)">Pi</span></h1><p>20 litros plantados, com um cardume de tetras-neon, camarões, caracóis e uma selva em crescimento.</p><div class="stats"><div class="stat"><strong>6</strong><span>Peixes</span></div><div class="stat"><strong>Indef.</strong><span>Invertebrados</span></div><div class="stat"><strong>6</strong><span>Espécies de plantas e algas</span></div></div></header>
 <nav class="filters" aria-label="Filtros"><button class="filter active" data-filter="all">Todos</button><button class="filter" data-filter="peixe">🐟 Peixes</button><button class="filter" data-filter="invertebrado">🦐 Invertebrados</button><button class="filter" data-filter="planta">🌿 Plantas e algas</button></nav>
 <main><section class="grid" id="grid"></section><section class="map-section"><h2>🗺️ De onde vêm</h2><p>Localização aproximada da origem natural de cada espécie. Toca num marcador para ver os detalhes.</p><div class="map-wrap"><div id="map" class="map"></div><div class="legend"><span><i class="dot fish"></i>Peixes</span><span><i class="dot inv"></i>Invertebrados</span><span><i class="dot plant"></i>Plantas e algas</span></div></div></section></main>
 <dialog id="details"><div class="modal-wrap"><button class="close" aria-label="Fechar">✕</button><div id="modal"></div></div></dialog>
-<footer>Aquário do Pi & Alice · Covilhã · 20 L</footer>
+<footer>Aquário do Pi · Covilhã · 20 L</footer>
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
 <script>
 const species=[
